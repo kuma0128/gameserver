@@ -86,7 +86,9 @@ class CreateRoomResponse(BaseModel):
 
 # -> 返り値の型
 @app.post("/room/create", response_model=CreateRoomResponse)
-def room_create(req: CreateRoomRequest, token: str = Depends(get_auth_token)) -> int:
+def room_create(
+    req: CreateRoomRequest, token: str = Depends(get_auth_token)
+) -> CreateRoomResponse:
     # print(req)
     host = model.get_user_by_token(token)
     # print(host)
@@ -94,3 +96,17 @@ def room_create(req: CreateRoomRequest, token: str = Depends(get_auth_token)) ->
     return CreateRoomResponse(
         room_id=model.Room_create(host.id, req.live_id, req.select_difficulty.value)
     )
+
+
+class RoomListRequest(BaseModel):
+    live_id: int
+
+
+class RoomListResponse(BaseModel):
+    room_info_list: list[RoomInfo]
+
+
+@app.post("/room/list", response_model=RoomListResponse)
+def room_list(req: RoomListRequest) -> RoomListResponse:
+    # print(req)
+    return RoomListResponse(room_info_list=model.Room_list(req.live_id))

@@ -93,7 +93,6 @@ def _get_user_by_token(conn, token: str) -> Optional[SafeUser]:
     except NoResultFound:
         return None
     return SafeUser.from_orm(row)
-    pass
 
 
 def get_user_by_token(token: str) -> Optional[SafeUser]:
@@ -110,20 +109,18 @@ def update_user(token: str, name: str, leader_card_id: int) -> None:
             ),
             dict(name=name, leader_card_id=leader_card_id, token=token),
         )
-    return None
-    pass
+    return
 
 
 def Room_create(host_id: int, live_id: int, select_difficulty: int) -> int:
     with engine.begin() as conn:
         result = conn.execute(
             text(
-                "insert into `room` (live_id, host_id, select_difficulty) values (:live_id, :host_id, :select_difficulty)"
+                "insert into `room` (live_id, host_id, room_status, joined_user_count, max_user_count) values (:live_id, :host_id, 1, 1, 4)"
             ),
             {
                 "live_id": live_id,
                 "host_id": host_id,
-                "select_difficulty": select_difficulty,
             },
         )
         # print(result)
@@ -134,3 +131,47 @@ def Room_create(host_id: int, live_id: int, select_difficulty: int) -> int:
         except NoResultFound:
             return None
         return room_id
+
+
+def Room_list(live_id: int) -> list[RoomInfo]:
+    if live_id == 0:
+        with engine.begin() as conn:
+            result = conn.execute(
+                text("select * from `room`"),
+            )
+            try:
+                rows = result.fetchall()
+            except NoResultFound:
+                return None
+            res = list([])
+            for row in rows:
+                res.append(
+                    RoomInfo(
+                        room_id=row.room_id,
+                        live_id=row.live_id,
+                        joined_user_count=row.joined_user_count,
+                        max_user_count=row.max_user_count,
+                    )
+                )
+            return res
+    else:
+        with engine.begin() as conn:
+            result = conn.execute(
+                text("select * from `room` where `live_id`=:live_id"),
+                dict(live_id=live_id),
+            )
+            try:
+                rows = result.fetchall()
+            except NoResultFound:
+                return None
+            res = list([])
+            for row in rows:
+                res.append(
+                    RoomInfo(
+                        room_id=row.room_id,
+                        live_id=row.live_id,
+                        joined_user_count=row.joined_user_count,
+                        max_user_count=row.max_user_count,
+                    )
+                )
+            return res
