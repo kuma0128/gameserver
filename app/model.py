@@ -12,6 +12,47 @@ from sqlalchemy.exc import NoResultFound
 from .db import engine
 
 
+# Enumと構造体を定義
+class LiveDifficulty(Enum):
+    normal = 1
+    hard = 2
+
+
+class JoinRoomResult(Enum):
+    Ok = 1
+    RoomFull = 2
+    Disbanded = 3
+    OtherError = 4
+
+
+class WaitRoomStatus(Enum):
+    Waiting = 1
+    LiveStart = 2
+    Dissolution = 3
+
+
+class RoomInfo(BaseModel):
+    room_id: int
+    live_id: int
+    joined_user_count: int
+    max_user_count: int
+
+
+class RoomUser(BaseModel):
+    user_id: int
+    name: str
+    leader_card_id: int
+    select_difficulty: LiveDifficulty
+    is_me: bool
+    is_host: bool
+
+
+class ResultUser(BaseModel):
+    user_id: int
+    judge_count_list: list[int]
+    score: int
+
+
 class InvalidToken(Exception):
     """指定されたtokenが不正だったときに投げる"""
 
@@ -71,3 +112,25 @@ def update_user(token: str, name: str, leader_card_id: int) -> None:
         )
     return None
     pass
+
+
+def Room_create(host_id: int, live_id: int, select_difficulty: int) -> int:
+    with engine.begin() as conn:
+        result = conn.execute(
+            text(
+                "insert into `room` (live_id, host_id, select_difficulty) values (:live_id, :host_id, :select_difficulty)"
+            ),
+            {
+                "live_id": live_id,
+                "host_id": host_id,
+                "select_difficulty": select_difficulty,
+            },
+        )
+        # print(result)
+        # print(type(result))
+        # row id取得（ここではroom_idに対応)
+        try:
+            room_id = result.lastrowid
+        except NoResultFound:
+            return None
+        return room_id

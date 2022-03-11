@@ -5,7 +5,15 @@ from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 
 from . import model
-from .model import SafeUser
+from .model import (
+    JoinRoomResult,
+    LiveDifficulty,
+    ResultUser,
+    RoomInfo,
+    RoomUser,
+    SafeUser,
+    WaitRoomStatus,
+)
 
 app = FastAPI()
 
@@ -65,3 +73,24 @@ def update(req: UserCreateRequest, token: str = Depends(get_auth_token)):
     # print(req)
     model.update_user(token, req.user_name, req.leader_card_id)
     return {}
+
+
+class CreateRoomRequest(BaseModel):
+    live_id: int
+    select_difficulty: LiveDifficulty
+
+
+class CreateRoomResponse(BaseModel):
+    room_id: int
+
+
+# -> 返り値の型
+@app.post("/room/create", response_model=CreateRoomResponse)
+def room_create(req: CreateRoomRequest, token: str = Depends(get_auth_token)) -> int:
+    # print(req)
+    host = model.get_user_by_token(token)
+    # print(host)
+    # response_modelとreturn値の型を合わせる必要がある！
+    return CreateRoomResponse(
+        room_id=model.Room_create(host.id, req.live_id, req.select_difficulty.value)
+    )
