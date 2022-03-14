@@ -11,6 +11,7 @@ from .model import (
     ResultUser,
     RoomInfo,
     RoomUser,
+    RoomWaitResponse,
     SafeUser,
     WaitRoomStatus,
 )
@@ -131,3 +132,13 @@ def room_join(
             host.id, req.room_id, req.select_difficulty.value
         )
     )
+
+
+class RoomID(BaseModel):
+    room_id: int
+
+
+@app.post("/room/wait", response_model=RoomWaitResponse)
+def room_wait(req: RoomID, token: str = Depends(get_auth_token)) -> RoomWaitResponse:
+    host = model.get_user_by_token(token)
+    return model.Room_wait(host.id, req.room_id)

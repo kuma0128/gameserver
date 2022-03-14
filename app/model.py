@@ -6,10 +6,12 @@ from unittest import result
 
 from fastapi import HTTPException
 from pydantic import BaseModel
-from sqlalchemy import text
+from sqlalchemy import false, text, true
 from sqlalchemy.exc import NoResultFound
 
 from .db import engine
+
+# from app.api import RoomWaitResponse
 
 
 # Enumと構造体を定義
@@ -201,7 +203,7 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
             )
             conn.execute(
                 text(
-                    "update room set `joined_user_count` = `joined_user_count` + 1 where `room_id`=:room_id"
+                    "update `room` set `joined_user_count` = `joined_user_count` + 1 where `room_id`=:room_id"
                 ),
                 dict(room_id=room_id),
             )
@@ -216,3 +218,52 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
         if res == 3:
             conn.execute(text("commit"))
             return JoinRoomResult(3)
+
+
+class RoomWaitResponse(BaseModel):
+    status: WaitRoomStatus
+    room_user_list: list[RoomUser]
+
+
+def Room_wait(user_id: int, room_id: int) -> RoomWaitResponse:
+    with engine.begin() as conn:
+        result1 = conn.execute(
+            text("select * from `room_member` where `room_id` =:room_id"),
+            dict(room_id=room_id),
+        )
+        row1 = result1.fetchall()
+        res = list([])
+        result3 = conn.execute(
+            text("select * from `room` where `room_id` =:room_id"),
+            dict(room_id=room_id),
+        )
+        row3 = result3.one()
+        res3 = row3.room_status
+        for row in row1:
+            result2 = conn.execute(
+                text("select * from `user` where `id` =:user_id"),
+                dict(user_id=row.user_id),
+            )
+            row2 = result2.one()
+
+            if row3.host_id == user_id:
+                hostf = 1
+            else:
+                hostf = 0
+            if row.user_id == user_id:
+                qryf = 1
+            else:
+                qryf = 0
+
+            res.append(
+                RoomUser(
+                    user_id=row.user_id,
+                    name=row2.name,
+                    leader_card_id=row2.leader_card_id,
+                    select_difficulty=row.difficulty,
+                    is_me=qryf,
+                    is_host=hostf,
+                )
+            )
+
+        return RoomWaitResponse(status=res3, room_user_list=res)
