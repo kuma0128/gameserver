@@ -110,3 +110,24 @@ class RoomListResponse(BaseModel):
 def room_list(req: RoomListRequest) -> RoomListResponse:
     # print(req)
     return RoomListResponse(room_info_list=model.Room_list(req.live_id))
+
+
+class RoomJoinRequest(BaseModel):
+    room_id: int
+    select_difficulty: LiveDifficulty
+
+
+class RoomJoinResponse(BaseModel):
+    join_room_result: JoinRoomResult
+
+
+@app.post("/room/join", response_model=RoomJoinResponse)
+def room_join(
+    req: RoomJoinRequest, token: str = Depends(get_auth_token)
+) -> RoomJoinResponse:
+    host = model.get_user_by_token(token)
+    return RoomJoinResponse(
+        join_room_result=model.Room_join(
+            host.id, req.room_id, req.select_difficulty.value
+        )
+    )

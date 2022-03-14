@@ -175,3 +175,44 @@ def Room_list(live_id: int) -> list[RoomInfo]:
                     )
                 )
             return res
+
+
+def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomResult:
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("select * from `room` where `room_id`=:room_id"), dict(room_id=room_id)
+        )
+        row = result.one()
+        try:
+            res = row.room_status
+        except NoResultFound:
+            conn.execute(text("commit"))
+            return JoinRoomResult(4)
+        if res == 1:
+            conn.execute(
+                text(
+                    "insert into `room_member` set `room_id`=:room_id, `user_id`=:user_id, `difficulty`=:select_difficulty"
+                ),
+                dict(
+                    room_id=room_id,
+                    user_id=user_id,
+                    select_difficulty=select_difficulty,
+                ),
+            )
+            conn.execute(
+                text(
+                    "update room set `joined_user_count` = `joined_user_count` + 1 where `room_id`=:room_id"
+                ),
+                dict(room_id=room_id),
+            )
+            # try:
+            #     row = result2.room_id
+            # except NoResultFound:
+            #     return None
+            return JoinRoomResult(1)
+        if res == 2:
+            conn.execute(text("commit"))
+            return JoinRoomResult(2)
+        if res == 3:
+            conn.execute(text("commit"))
+            return JoinRoomResult(3)
