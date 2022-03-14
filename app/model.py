@@ -11,6 +11,9 @@ from sqlalchemy.exc import NoResultFound
 
 from .db import engine
 
+# from app.api import RoomResultResponse
+
+
 # from app.api import RoomWaitResponse
 
 
@@ -278,5 +281,51 @@ def Room_start(user_id: int, room_id: int) -> None:
         row = result.one()
         host = row.host_id
         if host == user_id:
-            conn.execute(text("update `room` set `room_status`=:2"))
+            conn.execute(text("update `room` set `room_status`=2"))
     return
+
+
+def Room_end(user_id: int, room_id: int, score: int, judge: list[int]) -> None:
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "update `room_member` set `score`=:score, `perfect`=:perfect, `great`=:great, `good`=:good, `bad`=:bad, `miss`=:miss where `room_id`=:room_id AND `user_id`=:user_id"
+            ),
+            dict(
+                score=score,
+                room_id=room_id,
+                user_id=user_id,
+                perfect=judge[0],
+                great=judge[1],
+                good=judge[2],
+                bad=judge[3],
+                miss=judge[4],
+            ),
+        )
+
+    return
+
+
+class RoomResultResponse(BaseModel):
+    result_user_list: list[ResultUser]
+
+
+# def Room_result(room_id: int) -> RoomResultResponse:
+#     with engine.begin() as conn:
+#         result = conn.execute(
+#             text(
+#                 "select * from `room_member` where `room_id`=:room_id"
+#             ),
+#             dict(room_id=room_id),
+#         )
+#         rows = result.fetchall()
+#         res=list([])
+#         for row in rows:
+#             res.append(
+#                 ResultUser(
+#                     user_id=row.user_id,
+#                     judge_count_list=[row.perfect, row.great, row.good, row.bad, row.miss],
+#                     score=row.score,
+#                 )
+#             )
+#     return RoomWaitResponse(result_usr_list=res)

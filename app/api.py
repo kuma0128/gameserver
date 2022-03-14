@@ -10,6 +10,7 @@ from .model import (
     LiveDifficulty,
     ResultUser,
     RoomInfo,
+    RoomResultResponse,
     RoomUser,
     RoomWaitResponse,
     SafeUser,
@@ -149,3 +150,16 @@ def room_start(req: RoomID, token: str = Depends(get_auth_token)):
     host = model.get_user_by_token(token)
     model.Room_start(host.id, req.room_id)
     return {}
+
+
+class RoomEndRequest(BaseModel):
+    room_id: int
+    score: int
+    judge_count_list: list[int]
+
+
+# @app.post("/room/end", response_model=Empty)
+# def room_end(req: RoomEndRequest, token: str = Depends(get_auth_token)):
+#     user = model.get_user_by_token(token)
+#     model.Room_end(user.id, req.room_id, req.score, req.judge_count_list)
+#     return {}
