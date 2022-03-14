@@ -142,3 +142,10 @@ class RoomID(BaseModel):
 def room_wait(req: RoomID, token: str = Depends(get_auth_token)) -> RoomWaitResponse:
     host = model.get_user_by_token(token)
     return model.Room_wait(host.id, req.room_id)
+
+
+@app.post("/room/start", response_model=Empty)
+def room_start(req: RoomID, token: str = Depends(get_auth_token)):
+    host = model.get_user_by_token(token)
+    model.Room_start(host.id, req.room_id)
+    return {}

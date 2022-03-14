@@ -267,3 +267,16 @@ def Room_wait(user_id: int, room_id: int) -> RoomWaitResponse:
             )
 
         return RoomWaitResponse(status=res3, room_user_list=res)
+
+
+def Room_start(user_id: int, room_id: int) -> None:
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("select * from `room` where `room_id`=:room_id"),
+            dict(room_id=room_id),
+        )
+        row = result.one()
+        host = row.host_id
+        if host == user_id:
+            conn.execute(text("update `room` set `room_status`=:2"))
+    return
