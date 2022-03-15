@@ -171,7 +171,8 @@ def Room_list(live_id: int) -> list[RoomInfo]:
 def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomResult:
     with engine.begin() as conn:
         result = conn.execute(
-            text("select * from `room` where `room_id`=:room_id"), dict(room_id=room_id)
+            text("select * from `room` where `room_id`=:room_id"),
+            dict(room_id=room_id),
         )
         row = result.one()
         try:
@@ -179,6 +180,9 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
         except NoResultFound:
             conn.execute(text("commit"))
             return JoinRoomResult(4)
+        if (row.joined_user_count == 4) or (res == 2):
+            conn.execute(text("commit"))
+            return JoinRoomResult(2)
         if res == 1:
             conn.execute(
                 text(
@@ -196,14 +200,19 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
                 ),
                 dict(room_id=room_id),
             )
-            # try:
-            #     row = result2.room_id
-            # except NoResultFound:
-            #     return None
-            return JoinRoomResult(1)
-        if res == 2:
             conn.execute(text("commit"))
-            return JoinRoomResult(2)
+            count_check = conn.execute(
+                text("select `joined_user_count` from `room` where `room_id`=:room_id"),
+                dict(room_id=room_id),
+            )
+            if count_check == 4:
+                conn.execute(
+                    text(
+                        "update `room` set `room_status` = 4 where `room_id`=:room_id"
+                    ),
+                    dict(room_id=room_id),
+                )
+            return JoinRoomResult(1)
         if res == 3:
             conn.execute(text("commit"))
             return JoinRoomResult(3)
@@ -267,7 +276,10 @@ def Room_start(user_id: int, room_id: int) -> None:
         row = result.one()
         host = row.host_id
         if host == user_id:
-            conn.execute(text("update `room` set `room_status`=2"))
+            conn.execute(
+                text("update `room` set `room_status` = 2 where `room_id`=:room_id"),
+                dict(room_id=room_id),
+            )
     return
 
 
