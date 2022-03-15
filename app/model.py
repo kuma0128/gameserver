@@ -292,7 +292,10 @@ def Room_start(user_id: int, room_id: int) -> None:
         row = result.one()
         host = row.host_id
         if host == user_id:
-            conn.execute(text("update `room` set `room_status`=2"))
+            conn.execute(
+                text("update `room` set `room_status` = 2 where `room_id`=:room_id"),
+                dict(room_id=room_id),
+            )
     return
 
 
