@@ -310,22 +310,22 @@ class RoomResultResponse(BaseModel):
     result_user_list: list[ResultUser]
 
 
-# def Room_result(room_id: int) -> RoomResultResponse:
-#     with engine.begin() as conn:
-#         result = conn.execute(
-#             text(
-#                 "select * from `room_member` where `room_id`=:room_id"
-#             ),
-#             dict(room_id=room_id),
-#         )
-#         rows = result.fetchall()
-#         res=list([])
-#         for row in rows:
-#             res.append(
-#                 ResultUser(
-#                     user_id=row.user_id,
-#                     judge_count_list=[row.perfect, row.great, row.good, row.bad, row.miss],
-#                     score=row.score,
-#                 )
-#             )
-#     return RoomWaitResponse(result_usr_list=res)
+def Room_result(room_id: int) -> list[ResultUser]:
+    with engine.begin() as conn:
+        result = conn.execute(
+            text("select * from `room_member` where `room_id`=:room_id"),
+            dict(room_id=room_id),
+        )
+        rows = result.fetchall()
+        res = list([])
+        for row in rows:
+            res.append(
+                ResultUser(
+                    user_id=row.user_id,
+                    judge_count_list=list(
+                        [row.perfect, row.great, row.good, row.bad, row.miss]
+                    ),
+                    score=row.score,
+                )
+            )
+    return res
