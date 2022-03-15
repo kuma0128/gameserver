@@ -142,7 +142,7 @@ def Room_list(live_id: int) -> list[RoomInfo]:
     if live_id == 0:
         with engine.begin() as conn:
             result = conn.execute(
-                text("select * from `room`"),
+                text("select * from `room` where joined_user_count < 4"),
             )
             try:
                 rows = result.fetchall()
@@ -162,7 +162,9 @@ def Room_list(live_id: int) -> list[RoomInfo]:
     else:
         with engine.begin() as conn:
             result = conn.execute(
-                text("select * from `room` where `live_id`=:live_id"),
+                text(
+                    "select * from `room` where `live_id`=:live_id and joined_user_count < 4"
+                ),
                 dict(live_id=live_id),
             )
             try:
@@ -185,7 +187,8 @@ def Room_list(live_id: int) -> list[RoomInfo]:
 def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomResult:
     with engine.begin() as conn:
         result = conn.execute(
-            text("select * from `room` where `room_id`=:room_id"), dict(room_id=room_id)
+            text("select * from `room` where `room_id`=:room_id"),
+            dict(room_id=room_id),
         )
         row = result.one()
         try:
