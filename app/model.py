@@ -216,6 +216,18 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
                 ),
                 dict(room_id=room_id),
             )
+            conn.execute(text("commit"))
+            count_check = conn.execute(
+                text("select `joined_user_count` from `room` where `room_id`=:room_id"),
+                dict(room_id=room_id),
+            )
+            if count_check == 4:
+                conn.execute(
+                    text(
+                        "update `room` set `room_status` = 4 where `room_id`=:room_id"
+                    ),
+                    dict(room_id=room_id),
+                )
             return JoinRoomResult(1)
         if res == 3:
             conn.execute(text("commit"))
