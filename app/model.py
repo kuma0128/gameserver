@@ -329,3 +329,33 @@ def Room_result(room_id: int) -> list[ResultUser]:
                 )
             )
     return res
+
+
+def Room_leave(user_id: int, room_id: int) -> None:
+    with engine.begin() as conn:
+        counts = conn.execute(text("select `joined_user_count` from `room`"))
+        row = counts.one()
+        conn.execute(
+            text(
+                "delete from `room_member` where `room_id`=:room_id and `user_id`=:user_id"
+            ),
+            dict(room_id=room_id, user_id=user_id),
+        )
+        host = conn.execute(
+            text("select `host_id` from `room` where `room_id`=:room_id")
+        )
+        if host.one() == user_id:
+            conn.execute(text("update `room` set `room_status`=3"))
+        if row == 1:
+            conn.execute(
+                text("delete from `room` where `room_id`=:room_id"),
+                dict(room_id=room_id),
+            )
+        else:
+            conn.execute(
+                text(
+                    "update `room` set `joined_user_count` = `joined_user_count` - 1 where `room_id`=:room_id"
+                ),
+                dict(room_id=room_id),
+            )
+    return
