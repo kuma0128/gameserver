@@ -142,44 +142,30 @@ def Room_list(live_id: int) -> list[RoomInfo]:
     if live_id == 0:
         with engine.begin() as conn:
             result = conn.execute(
-                text("select * from `room`"),
+                text(
+                    "select * from `room` where `room_status` = 1 and `joined_user_count` < 4"
+                ),
             )
-            try:
-                rows = result.fetchall()
-            except NoResultFound:
-                return None
-            res = list([])
-            for row in rows:
-                res.append(
-                    RoomInfo(
-                        room_id=row.room_id,
-                        live_id=row.live_id,
-                        joined_user_count=row.joined_user_count,
-                        max_user_count=row.max_user_count,
-                    )
-                )
-            return res
     else:
         with engine.begin() as conn:
             result = conn.execute(
-                text("select * from `room` where `live_id`=:live_id"),
+                text(
+                    "select * from `room` where `room_status` = 1 and `live_id`=:live_id and and `joined_user_count` < 4"
+                ),
                 dict(live_id=live_id),
             )
-            try:
-                rows = result.fetchall()
-            except NoResultFound:
-                return None
-            res = list([])
-            for row in rows:
-                res.append(
-                    RoomInfo(
-                        room_id=row.room_id,
-                        live_id=row.live_id,
-                        joined_user_count=row.joined_user_count,
-                        max_user_count=row.max_user_count,
-                    )
-                )
-            return res
+    rows = result.fetchall()
+    res = list([])
+    for row in rows:
+        res.append(
+            RoomInfo(
+                room_id=row.room_id,
+                live_id=row.live_id,
+                joined_user_count=row.joined_user_count,
+                max_user_count=row.max_user_count,
+            )
+        )
+    return res
 
 
 def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomResult:
