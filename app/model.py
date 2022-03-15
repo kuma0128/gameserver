@@ -196,6 +196,9 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
         except NoResultFound:
             conn.execute(text("commit"))
             return JoinRoomResult(4)
+        if (row.joined_user_count == 4) or (res == 2):
+            conn.execute(text("commit"))
+            return JoinRoomResult(2)
         if res == 1:
             conn.execute(
                 text(
@@ -213,14 +216,7 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
                 ),
                 dict(room_id=room_id),
             )
-            # try:
-            #     row = result2.room_id
-            # except NoResultFound:
-            #     return None
             return JoinRoomResult(1)
-        if res == 2:
-            conn.execute(text("commit"))
-            return JoinRoomResult(2)
         if res == 3:
             conn.execute(text("commit"))
             return JoinRoomResult(3)
