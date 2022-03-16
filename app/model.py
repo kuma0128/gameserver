@@ -128,29 +128,33 @@ def Room_create(host_id: int, live_id: int, select_difficulty: int) -> int:
                 "host_id": host_id,
             },
         )
-        # print(result)
-        # print(type(result))
         # row id取得（ここではroom_idに対応)
-        try:
-            room_id = result.lastrowid
-        except NoResultFound:
-            return None
+        room_id = result.lastrowid
+        conn.execute(
+            text(
+                "insert into `room_member` set `room_id`=:room_id, `user_id`=:user_id, `difficulty`=:select_difficulty"
+            ),
+            dict(
+                room_id=room_id,
+                user_id=host_id,
+                select_difficulty=select_difficulty,
+            ),
+        )
         return room_id
 
 
 def Room_list(live_id: int) -> list[RoomInfo]:
-    if live_id == 0:
-        with engine.begin() as conn:
+    with engine.begin() as conn:
+        if live_id == 0:
             result = conn.execute(
                 text(
                     "select * from `room` where `room_status` = 1 and `joined_user_count` < 4"
                 ),
             )
-    else:
-        with engine.begin() as conn:
+        else:
             result = conn.execute(
                 text(
-                    "select * from `room` where `room_status` = 1 and `live_id`=:live_id and and `joined_user_count` < 4"
+                    "select * from `room` where `room_status` = 1 and `live_id`=:live_id and `joined_user_count` < 4"
                 ),
                 dict(live_id=live_id),
             )
@@ -171,19 +175,20 @@ def Room_list(live_id: int) -> list[RoomInfo]:
 def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomResult:
     with engine.begin() as conn:
         result = conn.execute(
-            text("select * from `room` where `room_id`=:room_id"),
+            text("select * from `room` where `room_id`=:room_id for update"),
             dict(room_id=room_id),
         )
         row = result.one()
-        try:
-            res = row.room_status
-        except NoResultFound:
-            conn.execute(text("commit"))
+        status = row.room_status
+        if status is None:
             return JoinRoomResult(4)
-        if (row.joined_user_count == 4) or (res == 2):
-            conn.execute(text("commit"))
+        if (row.joined_user_count == row.max_user_count) or (
+            status == WaitRoomStatus.LiveStart.value
+        ):
             return JoinRoomResult(2)
-        if res == 1:
+        if (row.joined_user_count == 0) or (status == WaitRoomStatus.Dissolution.value):
+            return JoinRoomResult(3)
+        if status == WaitRoomStatus.Waiting.value:
             conn.execute(
                 text(
                     "insert into `room_member` set `room_id`=:room_id, `user_id`=:user_id, `difficulty`=:select_difficulty"
@@ -205,17 +210,14 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
                 text("select `joined_user_count` from `room` where `room_id`=:room_id"),
                 dict(room_id=room_id),
             )
-            if count_check == 4:
+            if count_check == row.max_user_count:
                 conn.execute(
                     text(
-                        "update `room` set `room_status` = 4 where `room_id`=:room_id"
+                        "update `room` set `room_status` = 2 where `room_id`=:room_id"
                     ),
                     dict(room_id=room_id),
                 )
             return JoinRoomResult(1)
-        if res == 3:
-            conn.execute(text("commit"))
-            return JoinRoomResult(3)
 
 
 class RoomWaitResponse(BaseModel):
@@ -331,7 +333,10 @@ def Room_result(room_id: int) -> list[ResultUser]:
 
 def Room_leave(user_id: int, room_id: int) -> None:
     with engine.begin() as conn:
-        counts = conn.execute(text("select `joined_user_count` from `room`"))
+        counts = conn.execute(
+            text("select `joined_user_count` from `room` where `room_id`=:room_id"),
+            dict(room_id=room_id),
+        )
         row = counts.one()
         conn.execute(
             text(
@@ -340,7 +345,8 @@ def Room_leave(user_id: int, room_id: int) -> None:
             dict(room_id=room_id, user_id=user_id),
         )
         host = conn.execute(
-            text("select `host_id` from `room` where `room_id`=:room_id")
+            text("select `host_id` from `room` where `room_id`=:room_id"),
+            dict(room_id=room_id),
         )
         if host.one() == user_id:
             conn.execute(text("update `room` set `room_status`=3"))
