@@ -312,6 +312,18 @@ class RoomResultResponse(BaseModel):
 
 def Room_result(room_id: int) -> list[ResultUser]:
     with engine.begin() as conn:
+        nullcheck = conn.execute(
+            text(
+                "select * from `room_member` where `room_id`=:room_id and `score` is NULL"
+            ),
+            dict(room_id=room_id),
+        )
+        try:
+            nullcheck.one()
+        except:
+            pass
+        else:
+            return list([])
         result = conn.execute(
             text("select * from `room_member` where `room_id`=:room_id"),
             dict(room_id=room_id),
