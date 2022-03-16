@@ -205,7 +205,8 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
                 ),
                 dict(room_id=room_id),
             )
-            conn.execute(text("commit"))
+            # conn.execute(text("commit"))
+            # update文はすぐ更新されるのと上でfor updateしているからトランザクション続けておｋ
             count_check = conn.execute(
                 text("select `joined_user_count` from `room` where `room_id`=:room_id"),
                 dict(room_id=room_id),
