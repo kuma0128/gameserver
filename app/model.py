@@ -247,7 +247,7 @@ def Room_wait(user_id: int, room_id: int) -> RoomWaitResponse:
             )
             row2 = result2.one()
 
-            if row3.host_id == user_id:
+            if row3.host_id == row.user_id:
                 hostf = 1
             else:
                 hostf = 0
