@@ -90,7 +90,7 @@ def create_user(name: str, leader_card_id: int) -> str:
 
 def _get_user_by_token(conn, token: str) -> Optional[SafeUser]:
     result = conn.execute(
-        text("SELECT `u.id`, `u.name`, `u.leader_card_id` FROM `user` u WHERE `u.token`=:token"),
+        text("SELECT u.`id`, u.`name`, u.`leader_card_id` FROM `user` AS u WHERE u.`token`=:token"),
         dict(token=token),
     )
     try:
@@ -233,7 +233,7 @@ def Room_wait(user_id: int, room_id: int) -> RoomWaitResponse:
         row1 = result1.fetchall()
         res = list([])
         result3 = conn.execute(
-            text("SELECT `host_id` FROM `room` WHERE `room_id` =:room_id"),
+            text("SELECT `host_id`, `room_status` FROM `room` WHERE `room_id` =:room_id"),
             dict(room_id=room_id),
         )
         row3 = result3.one()
