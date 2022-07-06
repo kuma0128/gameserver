@@ -8,8 +8,6 @@ CREATE TABLE IF NOT EXISTS `user` (
   UNIQUE KEY `token` (`token`)
 ) ENGINE=InnoDB;
 
--- ROP INDEX IF EXISTS user_token_idx;
-CREATE INDEX user_token_idx ON user (token);
 
 DROP TABLE IF EXISTS `room`;
 CREATE TABLE IF NOT EXISTS `room` (
@@ -22,8 +20,6 @@ CREATE TABLE IF NOT EXISTS `room` (
   PRIMARY KEY (`room_id`)
 ) ENGINE=InnoDB;
 
--- DROP INDEX IF EXISTS room_roomid_idx;
-CREATE INDEX room_roomid_idx ON room (room_id);
 
 DROP TABLE IF EXISTS `room_member`;
 CREATE TABLE IF NOT EXISTS `room_member` (

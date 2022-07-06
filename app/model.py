@@ -111,7 +111,6 @@ def get_user_by_token(token: str) -> Optional[SafeUser]:
 
 
 def update_user(token: str, name: str, leader_card_id: int) -> None:
-    # このコードを実装してもらう
     with engine.begin() as conn:
         result = conn.execute(
             text(
