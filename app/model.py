@@ -43,6 +43,9 @@ class RoomInfo(BaseModel):
     max_user_count: int
 
 
+MAX_USER_COUNT = 4
+
+
 class RoomUser(BaseModel):
     user_id: int
     name: str
@@ -125,12 +128,13 @@ def Room_create(host_id: int, live_id: int, select_difficulty: int) -> int:
     with engine.begin() as conn:
         result = conn.execute(
             text(
-                "INSERT INTO `room` SET `live_id`=:live_id, `host_id`=:host_id, `room_status`=:room_status, `joined_user_count` = 1, `max_user_count` = 4"
+                "INSERT INTO `room` SET `live_id`=:live_id, `host_id`=:host_id, `room_status`=:room_status, `joined_user_count` = 1, `max_user_count`=:MAX_USER_COUNT"
             ),
             dict(
                 live_id=live_id,
                 host_id=host_id,
                 room_status=JoinRoomResult.Ok.value,
+                MAX_USER_COUNT=MAX_USER_COUNT,
             ),
         )
         # row id取得（ここではroom_idに対応)
