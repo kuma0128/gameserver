@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS `room` (
   `room_status` tinyint NOT NULL,
   `joined_user_count` tinyint NOT NULL,
   `max_user_count` tinyint NOT NULL,
-  PRIMARY KEY (`room_id`)
+  PRIMARY KEY (`room_id`),
+  FOREIGN KEY (`host_id`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB;
 
 
@@ -32,7 +33,9 @@ CREATE TABLE IF NOT EXISTS `room_member` (
   `good` smallint DEFAULT NULL,
   `bad` smallint DEFAULT NULL,
   `miss` smallint DEFAULT NUll,
-  PRIMARY KEY (`room_id`,`user_id`)
+  PRIMARY KEY (`room_id`,`user_id`),
+  FOREIGN KEY (`room_id`) REFERENCES `room` (`room_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB;
 
 
