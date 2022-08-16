@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS `user` (
   `leader_card_id` int  DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`)
-) ENGINE=InnoDB;
+);
 
 
 DROP TABLE IF EXISTS `room`;
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `room` (
   `max_user_count` tinyint NOT NULL,
   PRIMARY KEY (`room_id`),
   FOREIGN KEY (`host_id`) REFERENCES `user` (`id`)
-) ENGINE=InnoDB;
+);
 
 
 DROP TABLE IF EXISTS `room_member`;

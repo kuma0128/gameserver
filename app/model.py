@@ -203,7 +203,7 @@ def Room_join(user_id: int, room_id: int, select_difficulty: int) -> JoinRoomRes
         if status == WaitRoomStatus.Waiting.value:
             conn.execute(
                 text(
-                    "INSERT INTO `room_member` rm SET rm.`room_id`=:room_id, rm.`user_id`=:user_id, rm.`difficulty`=:select_difficulty"
+                    "INSERT INTO `room_member` SET `room_id`=:room_id, `user_id`=:user_id, `difficulty`=:select_difficulty"
                 ),
                 dict(
                     room_id=room_id,
